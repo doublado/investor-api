@@ -1,17 +1,12 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"investor-api/db"
 	"net/http"
-	"sync"
 
 	"investor-api/model"
-)
-
-var (
-	leaderboard     = make(map[string]int) // name -> score
-	leaderboardLock sync.RWMutex
 )
 
 func SubmitScoreHandler(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +51,12 @@ func GetLeaderboardHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			return
+		}
+	}(rows)
 
 	var results []model.LeaderboardEntry
 	for rows.Next() {
@@ -69,5 +69,8 @@ func GetLeaderboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+	err = json.NewEncoder(w).Encode(results)
+	if err != nil {
+		return
+	}
 }
