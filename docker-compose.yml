@@ -1,29 +1,35 @@
-version: "3.8"
+version: "3.9"
 
 services:
-  api:
+  app:
     build: .
+    ports:
+      - "8080:8080"
     depends_on:
       - db
-    expose:
-      - "8080"
     environment:
-      API_SECRET: ${API_SECRET}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      DB_DSN: ${DB_USER}:${DB_PASSWORD}@tcp(db:3306)/${DB_NAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - API_SECRET=${API_SECRET}
+      - DB_DSN=${DB_DSN}
+    env_file:
+      - .env
     restart: on-failure
 
   db:
     image: mariadb:11
-    restart: always
+    container_name: investor-db
+    env_file:
+      - .env
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
-      - ./db.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3306:3306"
 
 volumes:
   db_data:
