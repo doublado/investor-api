@@ -1,30 +1,23 @@
 # Dockerfile
-FROM golang:1.22-alpine AS builder
+FROM golang:1.24.2-bookworm AS builder
 
 WORKDIR /app
 
-# Required for go-openai and godotenv
-RUN apk add --no-cache git
+RUN apt-get update && apt-get install -y git
 
-# Copy and initialize Go modules
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the rest of the source
 COPY . .
 
-# Build the Go binary
 RUN go build -o investor-api .
 
-# Final stage
-FROM alpine:3.19
+FROM debian:bookworm-slim
 
 WORKDIR /app
 
-# Copy binary and files
 COPY --from=builder /app/investor-api .
 
-# Optional: copy static/config files if needed
 COPY .env.example .env
 
 EXPOSE 8080
