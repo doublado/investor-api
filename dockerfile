@@ -7,10 +7,13 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+
+# Disable CGO for static binary compatible with distroless
+ENV CGO_ENABLED=0
 RUN go build -o app
 
-# Final stage
-FROM gcr.io/distroless/base-debian11
+# Minimal runtime stage using distroless
+FROM gcr.io/distroless/static-debian11
 
 WORKDIR /app
 
@@ -19,4 +22,4 @@ COPY .env .env
 
 EXPOSE 8080
 
-CMD ["./app"]
+ENTRYPOINT ["/app/app"]
