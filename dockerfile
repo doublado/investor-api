@@ -8,11 +8,11 @@ RUN go mod download
 
 COPY . .
 
-# Disable CGO for static binary compatible with distroless
+# Disable CGO for static binary
 ENV CGO_ENABLED=0
 RUN go build -o app
 
-# Minimal runtime stage using distroless
+# Runtime stage
 FROM gcr.io/distroless/static-debian11
 
 WORKDIR /app
